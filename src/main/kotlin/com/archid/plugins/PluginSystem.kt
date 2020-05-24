@@ -56,8 +56,7 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
                                 upgradePlugin(manifest, oldManifest, plugin)
                             }
                         } else {
-                            installPlugin(jarUrl, manifest)
-                            plugin.onInstall(manifest)
+                            installPlugin(jarUrl, manifest, plugin)
                         }
 
                         processPlugin(manifest, plugin)
@@ -88,7 +87,7 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
         activePlugins[manifest.name] = ActivePlugin(manifest, plugin)
     }
 
-    private fun installPlugin(jarUrl: URL, manifest: Manifest) {
+    private fun installPlugin(jarUrl: URL, manifest: Manifest, plugin: Plugin) {
         manifest.workDir = File(pluginDir, manifest.name.toLowerCase().replace("""\\s""".toRegex(), "_"))
         manifest.workDir.mkdir()
 
@@ -117,6 +116,7 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
         }
 
         repository.store(manifest)
+        plugin.onInstall(manifest)
     }
 
     fun reload(newDir: File? = null) {
