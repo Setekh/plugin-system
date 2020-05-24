@@ -51,7 +51,6 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
                         if (oldManifest != null) {
                             if (oldManifest.version > manifest.version) {
                                 logger.severe("Skipping plugin " + manifest.name + ", version is lower than the installed one!")
-                                return
                             } else {
                                 upgradePlugin(manifest, oldManifest, plugin)
                             }
@@ -59,7 +58,11 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
                             installPlugin(jarUrl, manifest, plugin)
                         }
 
-                        processPlugin(manifest, plugin)
+                        if (manifest.isEnabled) {
+                            loadPlugin(manifest, plugin)
+                        } else {
+                            logger.warning("Skipping plugin " + manifest.name + " since it's disabled.")
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -79,7 +82,7 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
         plugin.onUpgrade(oldManifest, manifest)
     }
 
-    private fun processPlugin(manifest: Manifest, plugin: Plugin) {
+    private fun loadPlugin(manifest: Manifest, plugin: Plugin) {
         repository.store(manifest)
 
         plugin.load(manifest)
