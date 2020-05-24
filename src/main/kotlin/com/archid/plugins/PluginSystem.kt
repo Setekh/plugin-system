@@ -42,8 +42,7 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
 
                     if (activePlugin != null) {
                         logger.warning("Skipping plugin " + manifest.name + " due to it being actively present! Process restart required.")
-                    }
-                    else {
+                    } else {
                         val pluginClass = Class.forName(manifest.classPath, true, masterClassLoader)
                         val plugin = pluginClass.getDeclaredConstructor().newInstance() as Plugin
 
@@ -145,6 +144,61 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
 
         System.gc()
         start()
+    }
+
+    fun enable(pluginName: String): Boolean {
+        val manifest = repository.findByName(pluginName) ?: return let {
+            logger.warning("Could not find plugin with name $pluginName")
+            false
+        }
+
+        if (manifest.isEnabled)
+            return true
+
+        manifest.isEnabled = false
+        repository.store(manifest)
+
+        load(pluginName)
+
+
+        return true
+    }
+
+    fun disable(pluginName: String): Boolean {
+        val manifest = repository.findByName(pluginName) ?: return let {
+            logger.warning("Could not find plugin with name $pluginName")
+            false
+        }
+
+        if (!manifest.isEnabled)
+            return true
+
+        manifest.isEnabled = false
+        repository.store(manifest)
+
+        unload(pluginName)
+
+        return true
+    }
+
+    fun load(pluginName: String): Boolean {
+        val manifest = repository.findByName(pluginName) ?: return let {
+            logger.warning("Could not find plugin with name $pluginName")
+            false
+        }
+
+        try {
+            val pluginClass = Class.forName(manifest.classPath, true, masterClassLoader)
+            val plugin = pluginClass.getDeclaredConstructor().newInstance() as Plugin
+
+            loadPlugin(manifest, plugin)
+            logger.info("Loaded plugin ${manifest.name}")
+        } catch (e: Exception) {
+            logger.log(Level.SEVERE, "Failed loading plugin ${pluginName}!", e)
+            return false
+        }
+
+        return true
     }
 
     fun unload(pluginName: String): Boolean {
