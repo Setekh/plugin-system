@@ -23,7 +23,9 @@ class PluginRepository(private val boxStore: Box<PluginEntity>) {
 
             entity.version = manifest.version
             entity.isEnabled = manifest.isEnabled
-            boxStore.put(entity)
+
+            val id = boxStore.put(entity)
+            manifest.id = id
         }
     }
 

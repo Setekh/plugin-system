@@ -9,7 +9,7 @@ import java.io.File
 fun main() {
     val boxStore = MyObjectBox
             .builder()
-            .name("core")
+            .name("plugins-db")
             .build()
 
     val pluginEntityBox = boxStore.boxFor(PluginEntity::class)

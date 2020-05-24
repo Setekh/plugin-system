@@ -1,6 +1,7 @@
 package com.archid.plugins.models
 
 import com.google.gson.annotations.SerializedName
+import java.io.File
 
 data class Manifest(
     var id: Long = 0,
@@ -12,4 +13,8 @@ data class Manifest(
 
     @SerializedName(value = "enabled", alternate = ["isEnabled"])
     var isEnabled: Boolean = true
-)
+) {
+    @Transient
+    lateinit var workDir: File
+        internal set
+}

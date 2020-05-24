@@ -6,11 +6,13 @@ import java.net.URLClassLoader
 open class MasterClassLoader(urls: List<URL>) : URLClassLoader(urls.toTypedArray<URL>()) {
     companion object {
         val Empty = object : MasterClassLoader(emptyList()) {
-            override fun addUrls(urls: List<URL?>) {}
+            override fun addURL(url: URL?) {}
         }
     }
 
-    open fun addUrls(urls: List<URL?>) {
+    fun addUrl(url: URL) = super.addURL(url)
+
+    fun addUrls(urls: List<URL?>) {
         for (u in urls) {
             addURL(u)
         }
