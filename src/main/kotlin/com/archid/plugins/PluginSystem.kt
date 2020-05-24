@@ -24,8 +24,8 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
         val files = pluginDir.listFiles { file: File -> file.name.endsWith(".jar") }
                 ?: throw RuntimeException("No such directory or no rights! $pluginDir")
 
-        val urls = files.map { it.toURI().toURL() }
-        masterClassLoader = MasterClassLoader(emptyList())
+        val urls = files.map { it.toURI().toURL() } // add filter for jars without manifest?
+        masterClassLoader = MasterClassLoader(urls)
 
         val gson = Gson()
 
@@ -44,8 +44,6 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
                         logger.warning("Skipping plugin " + manifest.name + " due to it being actively present! Process restart required.")
                     }
                     else {
-                        masterClassLoader.addUrl(jarUrl)
-
                         val pluginClass = Class.forName(manifest.classPath, true, masterClassLoader)
                         val plugin = pluginClass.getDeclaredConstructor().newInstance() as Plugin
 
@@ -58,7 +56,7 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
                                 upgradePlugin(manifest, oldManifest, plugin)
                             }
                         } else {
-                            installPlugin(jarUrl, manifest, plugin)
+                            installPlugin(jarUrl, manifest)
                             plugin.onInstall(manifest)
                         }
 
@@ -90,8 +88,8 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
         activePlugins[manifest.name] = ActivePlugin(manifest, plugin)
     }
 
-    private fun installPlugin(jarUrl: URL, manifest: Manifest, plugin: Plugin) {
-        manifest.workDir = File(pluginDir, manifest.name.toLowerCase().replace("\\s".toRegex(), "_"))
+    private fun installPlugin(jarUrl: URL, manifest: Manifest) {
+        manifest.workDir = File(pluginDir, manifest.name.toLowerCase().replace("""\\s""".toRegex(), "_"))
         manifest.workDir.mkdir()
 
         ZipInputStream(jarUrl.openStream()).use { zip ->
@@ -108,7 +106,6 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
                 if (file.isDirectory)
                     file.mkdirs()
 
-                println(zipEntry.name)
                 file.createNewFile()
 
                 FileOutputStream(file).use {
