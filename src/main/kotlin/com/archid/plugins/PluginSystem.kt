@@ -20,6 +20,10 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
 
     private var masterClassLoader = MasterClassLoader.Empty
 
+    init {
+        pluginDir.mkdirs()
+    }
+
     fun start() {
         val files = pluginDir.listFiles { file: File -> file.name.endsWith(".jar") }
                 ?: throw RuntimeException("No such directory or no rights! $pluginDir")
@@ -121,6 +125,7 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
         plugin.onInstall(manifest)
     }
 
+    @JvmOverloads
     fun reload(newDir: File? = null) {
         if (newDir != null) pluginDir = newDir
         try {
@@ -217,6 +222,18 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
         }
 
         return true
+    }
+
+    fun shutdown() {
+        val activePlugins = activePlugins.values.toList()
+        for (activePlugin in activePlugins) {
+            val (manifest, plugin) = activePlugin
+            plugin.unload(manifest)
+
+            repository.store(manifest)
+        }
+
+        this.activePlugins.clear()
     }
 
     companion object {

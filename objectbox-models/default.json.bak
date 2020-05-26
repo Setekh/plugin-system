@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:3305823044701090424",
-      "lastPropertyId": "5:1490176542387717769",
+      "lastPropertyId": "6:1977836567362429219",
       "name": "PluginEntity",
       "properties": [
         {
@@ -33,8 +33,8 @@
           "flags": 4
         },
         {
-          "id": "5:1490176542387717769",
-          "name": "enabled",
+          "id": "6:1977836567362429219",
+          "name": "isEnabled",
           "type": 1,
           "flags": 4
         }
@@ -52,7 +52,9 @@
   "retiredIndexUids": [
     3668314584237227771
   ],
-  "retiredPropertyUids": [],
+  "retiredPropertyUids": [
+    1490176542387717769
+  ],
   "retiredRelationUids": [],
   "version": 1
 }
