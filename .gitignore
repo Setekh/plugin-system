@@ -1,7 +1,9 @@
 /.gradle/
 /.idea/
 /build/
+/test.dir2/
 
 *.mdb
 *.dylib
 *.so
+*.jar

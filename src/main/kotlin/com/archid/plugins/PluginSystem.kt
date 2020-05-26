@@ -155,11 +155,10 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
         if (manifest.isEnabled)
             return true
 
-        manifest.isEnabled = false
+        manifest.isEnabled = true
         repository.store(manifest)
 
         load(pluginName)
-
 
         return true
     }
