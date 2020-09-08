@@ -4,13 +4,12 @@ import com.archid.plugins.models.Manifest
 import com.archid.plugins.store.entity.PluginEntity
 import com.archid.plugins.store.entity.PluginEntity_
 import io.objectbox.Box
-import java.util.*
 
 class PluginRepository(private val boxStore: Box<PluginEntity>) {
 
     fun findByName(name: String): Manifest? {
         val entity = boxStore.query().equal(PluginEntity_.name, name).build().findFirst() ?: return null
-        return Manifest(entity.id, entity.name, entity.classPath, entity.version, entity.isEnabled)
+        return Manifest(entity.id, entity.name, entity.classPath, entity.version).apply { isEnabled = entity.isEnabled }
     }
 
     fun store(manifest: Manifest) {

@@ -3,12 +3,8 @@ package com.archid.plugins
 import java.net.URL
 import java.net.URLClassLoader
 
-open class MasterClassLoader(urls: List<URL>) : URLClassLoader(urls.toTypedArray<URL>()) {
-    companion object {
-        val Empty = object : MasterClassLoader(emptyList()) {
-            override fun addURL(url: URL?) {}
-        }
-    }
+
+open class MasterClassLoader(urls: List<URL>, parent: ClassLoader? = null) : URLClassLoader(urls.toTypedArray<URL>(), parent) {
 
     fun addUrl(url: URL) = super.addURL(url)
 

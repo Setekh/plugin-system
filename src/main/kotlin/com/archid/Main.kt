@@ -16,5 +16,8 @@ fun main() {
     val ps = PluginSystem(File("./test.dir"), pluginEntityBox)
     ps.start()
 
-    ps.unload("Test Plugin")
+    while (true) {
+        ps.reload()
+        Thread.sleep(10_000)
+    }
 }
