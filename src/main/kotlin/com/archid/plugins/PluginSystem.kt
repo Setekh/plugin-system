@@ -203,16 +203,21 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
     fun shutdown() {
         val activePlugins = activePlugins.values.toList()
         for (activePlugin in activePlugins) {
-            val (manifest, plugin) = activePlugin
-            plugin.unload(manifest)
+            try {
+                val (manifest, plugin) = activePlugin
+                plugin.unload(manifest)
 
-            repository.store(manifest)
+                repository.store(manifest)
+            } catch (e: Exception) {
+                logger.log(Level.SEVERE, "Failed saving plugin[${activePlugin.manifest.name}]!")
+            }
         }
 
         this.activePlugins.clear()
     }
 
     companion object {
+        @JvmStatic
         private val logger = Logger.getLogger(PluginSystem::class.java.name)
     }
 
