@@ -20,7 +20,6 @@ version '1.0'
 publishing {
     repositories {
         maven {
-            name = "Plugin system repo"
             url = uri("https://maven.pkg.github.com/Setekh/plugin-system")
             credentials {
                 username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
