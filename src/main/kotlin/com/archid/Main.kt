@@ -13,6 +13,7 @@ fun main() {
             .build()
 
     val pluginEntityBox = boxStore.boxFor(PluginEntity::class)
+
     val ps = PluginSystem(File("./test.dir"), pluginEntityBox)
     ps.start()
 
