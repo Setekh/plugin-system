@@ -18,6 +18,16 @@ group 'com.archid'
 version '1.0'
 
 publishing {
+    repositories {
+        maven {
+            name = "Plugin System"
+            url = uri("https://maven.pkg.github.com/Setekh/plugin-system")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
     publications {
         PluginSystem(MavenPublication) {
             from components.java
