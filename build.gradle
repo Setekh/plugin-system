@@ -17,21 +17,8 @@ apply plugin: 'io.objectbox'
 group 'com.archid'
 version '1.0'
 
-publishing {
-    repositories {
-        maven {
-            url = uri("https://maven.pkg.github.com/Setekh/plugin-system")
-            credentials {
-                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
-                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
-            }
-        }
-    }
-    publications {
-        PluginSystem(MavenPublication) {
-            from components.java
-        }
-    }
+java {
+    withSourcesJar()
 }
 
 compileKotlin {
@@ -45,6 +32,23 @@ compileTestKotlin {
         jvmTarget = JavaVersion.VERSION_11
     }
     kotlinOptions.useIR = true
+}
+
+publishing {
+    repositories {
+        maven {
+            url = uri("https://maven.pkg.github.com/Setekh/plugin-system")
+            credentials {
+                username = project.findProperty("user.name") ?: System.getenv("GITHUB_ACTOR")
+                password = project.findProperty("user.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+    publications {
+        PluginSystem(MavenPublication) {
+            from components.java
+        }
+    }
 }
 
 repositories {
