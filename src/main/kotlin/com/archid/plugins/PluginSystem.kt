@@ -1,5 +1,6 @@
 package com.archid.plugins
 
+import com.archid.plugins.dependency.PluginDependency
 import com.archid.plugins.models.ActivePlugin
 import com.archid.plugins.models.Manifest
 import com.archid.plugins.store.PluginRepository
@@ -18,6 +19,8 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
     private val activePlugins = HashMap<String, ActivePlugin>()
     private val repository: PluginRepository = PluginRepository(boxStore)
 
+    internal val dependencies: PluginDependency = PluginDependency()
+
     init {
         pluginDir.mkdirs()
     }
@@ -31,7 +34,7 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
         masterClassLoader.addUrls(urls)
 
         val gson = Gson()
-
+        dependencies.unlock()
         for (jarUrl in urls) {
             try {
                 val resource = readManifestInJar(jarUrl)
@@ -73,6 +76,7 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
             }
         }
 
+        dependencies.lock()
         masterClassLoader.close()
         System.gc()
 
@@ -88,9 +92,22 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
     private fun loadPlugin(manifest: Manifest, plugin: Plugin) {
         repository.store(manifest)
 
-        plugin.load(manifest)
+        if (plugin is AdvancedPlugin) {
+            plugin.onInitialize(this, manifest)
+        } else {
+            plugin.load(manifest)
+        }
 
         activePlugins[manifest.name] = ActivePlugin(manifest, plugin)
+    }
+
+    private fun unloadPlugin(activePlugin: ActivePlugin) {
+        val (manifest, plugin) = activePlugin
+        if (plugin is AdvancedPlugin) {
+            plugin.dispose()
+        } else {
+            plugin.unload(manifest)
+        }
     }
 
     private fun installPlugin(jarUrl: URL, manifest: Manifest, plugin: Plugin) {
@@ -132,11 +149,10 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
         if (newDir != null) pluginDir = newDir
 
         activePlugins.forEach { (_, activePlugin) ->
-            val plugin = activePlugin.plugin
             val manifest = activePlugin.manifest
 
             try {
-                plugin.unload(manifest)
+                unloadPlugin(activePlugin)
             } catch (e: Exception) {
                 logger.log(Level.SEVERE, "Failed unloading plugin[" + manifest.name + "]! Reloading will be impossible for this plugin.", e)
             }
@@ -177,7 +193,6 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
         repository.store(manifest)
 
         unload(pluginName)
-        activePlugins.remove(pluginName)
         return true
     }
 
@@ -188,8 +203,7 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
         }
 
         try {
-            val (manifest, plugin) = activePlugin
-            plugin.unload(manifest)
+            unloadPlugin(activePlugin)
         } catch (e: Exception) {
             logger.log(Level.SEVERE, "Failed unloading plugin ${pluginName}!", e)
             return false
@@ -204,8 +218,8 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
         val activePlugins = activePlugins.values.toList()
         for (activePlugin in activePlugins) {
             try {
-                val (manifest, plugin) = activePlugin
-                plugin.unload(manifest)
+                val (manifest) = activePlugin
+                unloadPlugin(activePlugin)
 
                 repository.store(manifest)
             } catch (e: Exception) {

@@ -29,6 +29,7 @@
  */
 package com.archid.plugins
 
+import java.lang.RuntimeException
 import java.net.URL
 import java.util.zip.ZipInputStream
 
@@ -51,3 +52,5 @@ fun readManifestInJar(url: URL): String? {
 
     return null
 }
+
+public inline fun PluginNotInitialized(): Nothing = throw RuntimeException("Plugin not initialized!")
