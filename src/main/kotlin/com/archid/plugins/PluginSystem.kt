@@ -47,6 +47,9 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
                     logger.warning("Skipping plugin " + manifest.name + " due to it being actively present! Process restart required.")
                 } else {
                     val pluginClass = Class.forName(manifest.classPath, true, masterClassLoader)
+                    preloadClasses(jarUrl, pluginClass)
+
+
                     val plugin = pluginClass.getDeclaredConstructor().newInstance() as Plugin
 
                     assignWorkDirectory(manifest)

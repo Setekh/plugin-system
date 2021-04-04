@@ -53,4 +53,20 @@ fun readManifestInJar(url: URL): String? {
     return null
 }
 
-public inline fun PluginNotInitialized(): Nothing = throw RuntimeException("Plugin not initialized!")
+fun preloadClasses(url: URL, parentClass: Class<*>) {
+    ZipInputStream(url.openStream()).use { zip ->
+        var zipEntry = zip.nextEntry
+        while (zipEntry != null) {
+            if (zipEntry.name.endsWith(".class")) {
+                if (zipEntry.name != parentClass.name) {
+                    val trimLen = zipEntry.name.length - 6
+                    val name = zipEntry.name.substring(0, trimLen).replace('/', '.')
+                    Class.forName(name, true, parentClass.classLoader)
+                }
+            }
+            zipEntry = zip.nextEntry
+        }
+    }
+}
+
+public fun PluginNotInitialized(): Nothing = throw RuntimeException("Plugin not initialized!")
