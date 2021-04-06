@@ -44,11 +44,10 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
                 val activePlugin = activePlugins[manifest.name]
 
                 if (activePlugin != null) {
-                    logger.warning("Skipping plugin " + manifest.name + " due to it being actively present! Process restart required.")
+                    logger.warning("Skipping plugin ${manifest.name} due to it being actively present! Process restart required.")
                 } else {
                     val pluginClass = Class.forName(manifest.classPath, true, masterClassLoader)
                     preloadClasses(jarUrl, pluginClass)
-
 
                     val plugin = pluginClass.getDeclaredConstructor().newInstance() as Plugin
 
@@ -59,7 +58,7 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
 
                     if (oldManifest != null) {
                         if (oldManifest.version > manifest.version) {
-                            logger.severe("Skipping plugin " + manifest.name + ", version is lower than the installed one!")
+                            logger.severe("Skipping plugin ${manifest.name}, version is lower than the installed one!")
                         } else if (manifest.version > oldManifest.version){
                             upgradePlugin(manifest, oldManifest, plugin)
                         }
@@ -70,12 +69,12 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
                     if (manifest.isEnabled) {
                         loadPlugin(manifest, plugin)
                     } else {
-                        logger.warning("Skipping plugin " + manifest.name + " since it's disabled.")
+                        logger.warning("Skipping plugin ${manifest.name} since it's disabled.")
                     }
                 }
 
             } catch (e: Exception) {
-                logger.log(Level.SEVERE, "Failed loading plugin " + jarUrl.file + "!", e)
+                logger.log(Level.SEVERE, "Failed loading plugin ${jarUrl.file}!", e)
             }
         }
 
@@ -83,7 +82,7 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
         masterClassLoader.close()
         System.gc()
 
-        logger.info("Loaded " + activePlugins.size + " Plugin(s).")
+        logger.info("Loaded ${activePlugins.size} Plugin(s).")
     }
 
     private fun upgradePlugin(manifest: Manifest, oldManifest: Manifest, plugin: Plugin) {
@@ -157,7 +156,8 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
             try {
                 unloadPlugin(activePlugin)
             } catch (e: Exception) {
-                logger.log(Level.SEVERE, "Failed unloading plugin[" + manifest.name + "]! Reloading will be impossible for this plugin.", e)
+                logger.log(Level.SEVERE,
+                    "Failed unloading plugin[${manifest.name}]! Reloading will be impossible for this plugin.", e)
             }
         }
 
