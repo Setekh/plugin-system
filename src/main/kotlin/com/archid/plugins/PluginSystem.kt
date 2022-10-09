@@ -4,9 +4,7 @@ import com.archid.plugins.dependency.PluginDependency
 import com.archid.plugins.models.ActivePlugin
 import com.archid.plugins.models.Manifest
 import com.archid.plugins.store.PluginRepository
-import com.archid.plugins.store.entity.PluginEntity
 import com.google.gson.Gson
-import io.objectbox.Box
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
@@ -14,10 +12,11 @@ import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
 import java.util.zip.ZipInputStream
+import javax.sql.DataSource
 
-class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
+class PluginSystem(private var pluginDir: File, dataSource: DataSource) {
     private val activePlugins = HashMap<String, ActivePlugin>()
-    private val repository: PluginRepository = PluginRepository(boxStore)
+    private val repository: PluginRepository = PluginRepository(dataSource)
 
     internal val dependencies: PluginDependency = PluginDependency()
 
@@ -142,7 +141,7 @@ class PluginSystem(private var pluginDir: File, boxStore: Box<PluginEntity>) {
     }
 
     private fun assignWorkDirectory(manifest: Manifest) {
-        manifest.workDir = File(pluginDir, manifest.name.toLowerCase().replace("""\s""".toRegex(), "_"))
+        manifest.workDir = File(pluginDir, manifest.name.lowercase().replace("""\s""".toRegex(), "_"))
         manifest.workDir.mkdir()
     }
 

@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 import java.io.File
 
 data class Manifest(
-    var id: Long = 0,
+    var id: Int = 0,
     var name: String = "",
     var classPath: String = "",
 

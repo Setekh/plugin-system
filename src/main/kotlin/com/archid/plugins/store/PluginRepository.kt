@@ -1,30 +1,43 @@
 package com.archid.plugins.store
 
 import com.archid.plugins.models.Manifest
-import com.archid.plugins.store.entity.PluginEntity
-import com.archid.plugins.store.entity.PluginEntity_
-import io.objectbox.Box
+import com.archid.plugins.store.entity.PluginManifest
+import com.archid.plugins.store.entity.PluginManifests
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.transaction
+import javax.sql.DataSource
 
-class PluginRepository(private val boxStore: Box<PluginEntity>) {
+class PluginRepository(dataSource: DataSource) {
+
+    init {
+        val db = Database.connect(dataSource)
+        transaction(db) {
+            // Create tables
+            SchemaUtils.create(PluginManifests)
+        }
+    }
 
     fun findByName(name: String): Manifest? {
-        val entity = boxStore.query().equal(PluginEntity_.name, name).build().findFirst() ?: return null
-        return Manifest(entity.id, entity.name, entity.classPath, entity.version).apply { isEnabled = entity.isEnabled }
+        val entity = PluginManifest.find { PluginManifests.name eq name }.firstOrNull() ?: return null
+
+        return Manifest(entity.id.value, entity.name, entity.classPath, entity.version).apply { isEnabled = entity.isEnabled }
     }
 
     fun store(manifest: Manifest) {
-        if (manifest.id <= 0) { // crete
-            val entity = PluginEntity(0, manifest.name, manifest.classPath, manifest.version, manifest.isEnabled)
-            boxStore.put(entity)
+        if (manifest.id <= 0) { // create
+            PluginManifest.new {
+                name = manifest.name
+                classPath = manifest.classPath
+                version = manifest.version
+                isEnabled = manifest.isEnabled
+            }
         } else {
-            val entity = boxStore.query().equal(PluginEntity_.id, manifest.id).build().findFirst() ?:
-                boxStore.query().equal(PluginEntity_.name, manifest.name).build().findFirst()!!
+            val entity = PluginManifest.find { PluginManifests.name eq manifest.name }.first()
 
             entity.version = manifest.version
             entity.isEnabled = manifest.isEnabled
-
-            val id = boxStore.put(entity)
-            manifest.id = id
+            manifest.id = entity.id.value
         }
     }
 

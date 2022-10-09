@@ -1,18 +1,7 @@
-buildscript {
-    ext.kotlin_version = '1.4.31'
-    ext.objectboxVersion = '2.9.1'
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath "io.objectbox:objectbox-gradle-plugin:$objectboxVersion"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
+plugins {
+    id 'maven-publish'
+    id 'org.jetbrains.kotlin.jvm' version '1.7.20'
 }
-
-apply plugin: "maven-publish"
-apply plugin: 'kotlin'
-apply plugin: 'io.objectbox'
 
 group 'com.archid'
 version '1.0-SNAPSHOT'
@@ -23,15 +12,16 @@ java {
 
 compileKotlin {
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11
+        jvmTarget = JavaVersion.VERSION_17
     }
-    kotlinOptions.useIR = true
+    kotlinOptions.useK2 = true
 }
+
 compileTestKotlin {
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11
+        jvmTarget = JavaVersion.VERSION_17
     }
-    kotlinOptions.useIR = true
+    kotlinOptions.useK2 = true
 }
 
 publishing {
@@ -58,10 +48,12 @@ repositories {
 dependencies {
     testImplementation group: 'junit', name: 'junit', version: '4.12'
 
-    implementation "io.objectbox:objectbox-linux:$objectboxVersion"
-    implementation "io.objectbox:objectbox-macos:$objectboxVersion"
-    implementation "io.objectbox:objectbox-windows:$objectboxVersion"
+    def exposedVersion = '0.40.1'
+    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
 
-    implementation 'com.google.code.gson:gson:2.8.6'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation 'com.google.code.gson:gson:2.9.0'
+
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.7.20'
 }

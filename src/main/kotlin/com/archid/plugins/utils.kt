@@ -29,7 +29,6 @@
  */
 package com.archid.plugins
 
-import java.lang.RuntimeException
 import java.net.URL
 import java.util.zip.ZipInputStream
 
@@ -69,4 +68,4 @@ fun preloadClasses(url: URL, parentClass: Class<*>) {
     }
 }
 
-public fun PluginNotInitialized(): Nothing = throw RuntimeException("Plugin not initialized!")
+fun PluginNotInitialized(): Nothing = throw RuntimeException("Plugin not initialized!")
