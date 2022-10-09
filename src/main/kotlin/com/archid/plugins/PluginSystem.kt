@@ -4,7 +4,11 @@ import com.archid.plugins.dependency.PluginDependency
 import com.archid.plugins.models.ActivePlugin
 import com.archid.plugins.models.Manifest
 import com.archid.plugins.store.PluginRepository
+import com.archid.plugins.store.entity.PluginManifests
 import com.google.gson.Gson
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
@@ -16,17 +20,23 @@ import javax.sql.DataSource
 
 class PluginSystem(private var pluginDir: File, dataSource: DataSource) {
     private val activePlugins = HashMap<String, ActivePlugin>()
-    private val repository: PluginRepository = PluginRepository(dataSource)
+    private val repository: PluginRepository = PluginRepository()
 
     internal val dependencies: PluginDependency = PluginDependency()
 
     init {
         pluginDir.mkdirs()
+
+        val db = Database.connect(dataSource)
+        transaction(db) {
+            // Create tables
+            SchemaUtils.create(PluginManifests)
+        }
     }
 
     fun start() {
         val files = pluginDir.listFiles { file: File -> file.name.endsWith(".jar") }
-                ?: throw RuntimeException("No such directory or no rights! $pluginDir")
+            ?: throw RuntimeException("No such directory or no rights! $pluginDir")
 
         val urls = files.map { it.toURI().toURL() }
         val masterClassLoader = MasterClassLoader(emptyList(), javaClass.classLoader)
@@ -37,7 +47,7 @@ class PluginSystem(private var pluginDir: File, dataSource: DataSource) {
         for (jarUrl in urls) {
             try {
                 val resource = readManifestInJar(jarUrl)
-                        ?: throw RuntimeException("No manifest for plugin!")
+                    ?: throw RuntimeException("No manifest for plugin!")
 
                 val manifest = gson.fromJson(resource, Manifest::class.java)
                 val activePlugin = activePlugins[manifest.name]
@@ -58,7 +68,7 @@ class PluginSystem(private var pluginDir: File, dataSource: DataSource) {
                     if (oldManifest != null) {
                         if (oldManifest.version > manifest.version) {
                             logger.severe("Skipping plugin ${manifest.name}, version is lower than the installed one!")
-                        } else if (manifest.version > oldManifest.version){
+                        } else if (manifest.version > oldManifest.version) {
                             upgradePlugin(manifest, oldManifest, plugin)
                         }
                     } else {
@@ -116,7 +126,8 @@ class PluginSystem(private var pluginDir: File, dataSource: DataSource) {
             var zipEntry = zip.nextEntry
             while (zipEntry != null) {
                 if (!zipEntry.name.startsWith("assets") ||
-                        zipEntry.name == "assets/") {
+                    zipEntry.name == "assets/"
+                ) {
                     zipEntry = zip.nextEntry
                     continue
                 }
@@ -155,8 +166,10 @@ class PluginSystem(private var pluginDir: File, dataSource: DataSource) {
             try {
                 unloadPlugin(activePlugin)
             } catch (e: Exception) {
-                logger.log(Level.SEVERE,
-                    "Failed unloading plugin[${manifest.name}]! Reloading will be impossible for this plugin.", e)
+                logger.log(
+                    Level.SEVERE,
+                    "Failed unloading plugin[${manifest.name}]! Reloading will be impossible for this plugin.", e
+                )
             }
         }
 

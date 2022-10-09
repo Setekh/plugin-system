@@ -3,21 +3,8 @@ package com.archid.plugins.store
 import com.archid.plugins.models.Manifest
 import com.archid.plugins.store.entity.PluginManifest
 import com.archid.plugins.store.entity.PluginManifests
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.transaction
-import javax.sql.DataSource
 
-class PluginRepository(dataSource: DataSource) {
-
-    init {
-        val db = Database.connect(dataSource)
-        transaction(db) {
-            // Create tables
-            SchemaUtils.create(PluginManifests)
-        }
-    }
-
+class PluginRepository() {
     fun findByName(name: String): Manifest? {
         val entity = PluginManifest.find { PluginManifests.name eq name }.firstOrNull() ?: return null
 
